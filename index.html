@@ -1,1290 +1,628 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Falling Through the Earth — An Interactive Physics Journey</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #f5f0e8;
-  --text: #2c2416;
-  --accent: #b8390e;
-  --blue: #1b5e8a;
-  --green: #2a7a4b;
-  --gold: #c4930a;
-  --muted: #7a7060;
-  --card: #ece6d9;
-  --dark: #1e1a14;
-  --serif: 'Libre Baskerville', Georgia, serif;
-  --sans: 'Outfit', system-ui, sans-serif;
-  --mono: 'Fira Code', monospace;
-  --max-w: 780px;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: var(--serif);
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.78;
-  font-size: 18px;
-  -webkit-font-smoothing: antialiased;
-}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ceci n'est pas un chirp — Representation, Observation &amp; Theory-Ladenness</title>
 
-/* Grain overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 9999;
-}
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-.topbar {
-  background: var(--dark);
-  color: #d4c9b8;
-  padding: 10px 0;
-  font-family: var(--sans);
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-align: center;
-  font-weight: 500;
-}
+  <style>
+    :root {
+      --col-bg:       #f4f1eb;
+      --col-paper:    #fffdf8;
+      --col-ink:      #1a1715;
+      --col-muted:    #6b6460;
+      --col-accent:   #b5401e;
+      --col-accent2:  #1b5e7a;
+      --col-line:     #d8d3cb;
+      --col-callout:  #eae6dd;
+      --col-tok:      #e1ecf0;
+      --col-prompt:   #fdf0e6;
+      --max-w:        1060px;
+      --radius:       10px;
+      --serif:        'Source Serif 4', 'Georgia', serif;
+      --display:      'Playfair Display', 'Georgia', serif;
+      --mono:         'JetBrains Mono', 'Menlo', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--col-ink);
+      background: var(--col-bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--col-accent2); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--col-accent); }
 
-.hero {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 70px 24px 50px;
-  text-align: center;
-}
-.kicker {
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 18px;
-}
-h1 {
-  font-size: clamp(32px, 5vw, 52px);
-  font-weight: 700;
-  line-height: 1.15;
-  margin-bottom: 22px;
-}
-.deck {
-  font-size: 20px;
-  color: var(--muted);
-  max-width: 580px;
-  margin: 0 auto;
-  font-style: italic;
-  line-height: 1.6;
-}
+    /* ── Hero ── */
+    .hero {
+      position: relative; overflow: hidden;
+      background: var(--col-ink); color: var(--col-bg);
+      padding: 5rem 1.5rem 4rem; text-align: center;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(181,64,30,.12) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,.015) 3px, rgba(255,255,255,.015) 4px);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-family: var(--display); font-weight: 900;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      letter-spacing: -0.025em; line-height: 1.1;
+      margin-bottom: 0.6rem; position: relative;
+    }
+    .hero h1 em { font-style: italic; color: var(--col-accent); }
+    .hero .subtitle {
+      font-family: var(--serif); font-weight: 300; font-size: 1.15rem;
+      max-width: 52ch; margin: 0 auto; opacity: 0.85; line-height: 1.55;
+    }
+    .hero .pipe-img {
+      display: block; max-width: min(420px, 85%); margin: 2.5rem auto 0;
+      border-radius: var(--radius); border: 2px solid rgba(255,255,255,.12);
+      box-shadow: 0 12px 48px rgba(0,0,0,.5);
+    }
+    .hero .caption { margin-top: 0.8rem; font-size: 0.88rem; font-style: italic; opacity: 0.6; }
 
-article { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 100px; }
+    /* ── Nav pills ── */
+    .toc-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(244,241,235,.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--col-line);
+      padding: 0.6rem 1rem; display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: center;
+    }
+    .toc-bar a {
+      font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.04em;
+      text-transform: uppercase; text-decoration: none;
+      padding: 0.35rem 0.7rem; border: 1px solid var(--col-line);
+      border-radius: 999px; background: var(--col-paper); color: var(--col-muted);
+      transition: all .2s;
+    }
+    .toc-bar a:hover { background: var(--col-ink); color: var(--col-bg); border-color: var(--col-ink); }
 
-h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 55px 0 16px;
-  line-height: 1.25;
-}
+    main { max-width: var(--max-w); margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    section { margin: 2.5rem 0; }
+    .section-label {
+      font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--col-accent); margin-bottom: 0.25rem;
+    }
+    h2 {
+      font-family: var(--display); font-weight: 700;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      letter-spacing: -0.015em; line-height: 1.15; margin-bottom: 0.6rem;
+    }
+    h3 { font-family: var(--display); font-weight: 700; font-size: 1.15rem; margin: 1rem 0 0.3rem; }
 
-h3 {
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--blue);
-  margin: 50px 0 10px;
-}
+    .card {
+      background: var(--col-paper); border: 1px solid var(--col-line);
+      border-radius: var(--radius); padding: 1.4rem 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    }
+    .grid2 { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
+    @media (min-width: 820px) { .grid2 { grid-template-columns: 1fr 1fr; } }
 
-p { margin-bottom: 18px; }
-.lead { font-size: 21px; line-height: 1.7; }
+    .callout {
+      padding: 0.85rem 1rem; border-radius: 8px; margin: 0.75rem 0;
+      border-left: 4px solid var(--col-line); background: var(--col-callout);
+    }
+    .callout.tok   { background: var(--col-tok);   border-left-color: var(--col-accent2); }
+    .callout.prompt{ background: var(--col-prompt); border-left-color: var(--col-accent); }
+    .callout h4 {
+      font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.3rem;
+    }
+    .callout.tok h4    { color: var(--col-accent2); }
+    .callout.prompt h4 { color: var(--col-accent); }
 
-.pullquote {
-  border-left: 3px solid var(--accent);
-  padding: 2px 0 2px 22px;
-  margin: 36px 0;
-  font-size: 23px;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--text);
-}
+    figure { margin: 1rem 0; }
+    figure img { width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--col-line); }
+    figcaption { font-size: 0.88rem; color: var(--col-muted); margin-top: 0.35rem; font-style: italic; }
+    audio { width: 100%; margin: 0.5rem 0; }
 
-.thought-box {
-  background: var(--card);
-  border-radius: 10px;
-  padding: 22px 26px;
-  margin: 30px 0;
-  border-left: 4px solid var(--gold);
-}
-.thought-box .tag {
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 8px;
-}
+    table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid var(--col-line); padding: 0.6rem 0.7rem; vertical-align: top; }
+    th { background: var(--col-callout); text-align: left; font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
 
-.eq {
-  background: var(--card);
-  border-radius: 8px;
-  padding: 18px 24px;
-  margin: 24px 0;
-  text-align: center;
-  border: 1px solid rgba(0,0,0,0.06);
-}
-.eq .label {
-  font-family: var(--sans);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
+    .sep { height: 1px; background: var(--col-line); margin: 1.25rem 0; }
 
-/* Interactive panels */
-.panel {
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 14px;
-  margin: 36px -60px;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
-}
-@media (max-width: 900px) { .panel { margin: 36px -8px; } }
-.panel-head {
-  background: var(--dark);
-  color: #d4c9b8;
-  padding: 14px 24px;
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.panel-head .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.panel-body { padding: 24px; }
+    .magritte-caption {
+      font-family: var(--display); font-style: italic; font-size: 1.35rem;
+      text-align: center; margin: 1.2rem 0 0.5rem; color: var(--col-accent);
+    }
 
-canvas { display: block; border-radius: 8px; }
+    /* ── Toggle button ── */
+    .toggle-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.04em;
+      padding: 0.5rem 1rem; border: 2px solid var(--col-accent2);
+      border-radius: 999px; background: var(--col-paper); color: var(--col-accent2);
+      cursor: pointer; transition: all .25s; margin: 0.6rem 0;
+    }
+    .toggle-btn:hover { background: var(--col-accent2); color: #fff; }
+    .toggle-btn.active { background: var(--col-accent2); color: #fff; }
+    .toggle-btn .dot {
+      display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--col-line); transition: background .25s;
+    }
+    .toggle-btn.active .dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
 
-.ctrls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 12px;
-  font-family: var(--sans);
-  font-size: 13px;
-  align-items: center;
-}
-.ctrls label {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  color: var(--muted);
-  font-weight: 500;
-}
-.ctrls input[type="range"] { width: 130px; accent-color: var(--accent); }
-.ctrls .v { font-family: var(--mono); font-size: 13px; color: var(--text); }
-.ctrls button {
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 14px;
-  border: 1px solid rgba(0,0,0,0.1);
-  border-radius: 6px;
-  background: var(--card);
-  cursor: pointer;
-  transition: 0.15s;
-}
-.ctrls button:hover { background: var(--dark); color: var(--bg); }
-.ctrls button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+    /* ── Dalmatian reveal ── */
+    .dalmatian-wrap { position: relative; display: inline-block; width: 100%; }
+    .dalmatian-wrap img { display: block; width: 100%; border-radius: var(--radius); border: 1px solid var(--col-line); }
+    .dalmatian-overlay {
+      position: absolute; inset: 0; pointer-events: none;
+      opacity: 0; transition: opacity .5s; border-radius: var(--radius);
+    }
+    .dalmatian-overlay.visible { opacity: 1; }
 
-.cap {
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 10px;
-  line-height: 1.5;
-}
+    /* ── Filter canvas ── */
+    .filter-canvas-wrap {
+      position: relative; background: #0d1117;
+      border-radius: var(--radius); overflow: hidden; margin: 0.75rem 0;
+    }
+    .filter-canvas-wrap canvas { display: block; width: 100%; height: 240px; }
+    .filter-label {
+      position: absolute; top: 10px; left: 14px;
+      font-family: var(--mono); font-size: 0.72rem;
+      color: rgba(255,255,255,.55); letter-spacing: 0.06em; text-transform: uppercase;
+    }
 
-.sep { width: 36px; height: 2px; background: var(--accent); margin: 55px auto; }
+    .placeholder {
+      background: repeating-linear-gradient(-45deg, var(--col-callout), var(--col-callout) 12px, var(--col-bg) 12px, var(--col-bg) 24px);
+      border: 2px dashed var(--col-line); border-radius: var(--radius);
+      padding: 2.5rem 1.5rem; text-align: center; color: var(--col-muted);
+      font-family: var(--mono); font-size: 0.85rem;
+    }
+    .placeholder code { display: inline-block; background: rgba(0,0,0,.06); padding: 0.15rem 0.4rem; border-radius: 4px; }
 
-.ib-tag {
-  display: inline-block;
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-}
-.ib-tag.hl { background: #e8d5f0; color: #6b2d8b; }
-.ib-tag.sl { background: #d5e8f0; color: #2d5a8b; }
-.ib-tag.al { background: #d5f0e0; color: #2a6b3e; }
-</style>
+    footer {
+      max-width: var(--max-w); margin: 0 auto; padding: 1.25rem 1.25rem 2rem;
+      border-top: 1px solid var(--col-line); font-size: 0.9rem; color: var(--col-muted);
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    .card { animation: fadeUp .5s ease both; }
+  </style>
 </head>
+
 <body>
 
-<div class="topbar">Interactive Explainer · Mechanics & Gravitation</div>
-
+<!-- ═══ HERO ═══ -->
 <div class="hero">
-  <div class="kicker">A Thought Experiment</div>
-  <h1>What Happens If You Fall Through the Earth?</h1>
-  <p class="deck">A journey from a lift shaft to Newton's shell theorem, the harmonic oscillator, and the virial theorem — the hidden energy balance of every orbit in the universe.</p>
+  <h1><em>Ceci n'est pas</em> un chirp</h1>
+  <p class="subtitle">
+    Representation, observation, and theory-ladenness — from Magritte's pipe to LIGO's gravitational waves.
+    A TOK-in-Physics walkthrough.
+  </p>
+  <img class="pipe-img" src="MagrittePipe.jpg" alt="Magritte — The Treachery of Images" />
+  <p class="caption">René Magritte, <em>La Trahison des images</em> (1929)</p>
 </div>
 
-<article>
+<!-- ═══ NAV ═══ -->
+<nav class="toc-bar">
+  <a href="#representation">Representation</a>
+  <a href="#pattern">Pattern &amp; model</a>
+  <a href="#chirps">Chirps</a>
+  <a href="#filter-demo">Matched filter</a>
+  <a href="#theory-laden">Theory-ladenness</a>
+  <a href="#criteria">Criteria</a>
+  <a href="#exit">Exit ticket</a>
+</nav>
 
-<p class="lead">Imagine you could drill a tunnel straight through the centre of the Earth. You step in. There's no air resistance, no friction. You fall. The question is: what happens next?</p>
+<!-- ═══ MAIN ═══ -->
+<main>
 
-<div class="thought-box">
-  <div class="tag">Think first</div>
-  <p style="margin:0;">Before reading on, commit to an answer. Do you (a) accelerate all the way to the centre and crash into the far side, (b) reach the centre and stop, or (c) something else entirely?</p>
-</div>
-
-<p>The answer is (c). You oscillate. You fall through the centre, decelerate on the other side, come momentarily to rest at the surface on the far side, and then fall back. Back and forth, endlessly. The motion is <em>simple harmonic</em> — exactly the same as a mass on a spring.</p>
-
-<p>This is a strange result. Gravity gets stronger as you approach a massive body, doesn't it? So why would you slow down before reaching the centre? The answer lies in one of Newton's most beautiful results.</p>
-
-<div class="sep"></div>
-
-<h3>The Key Insight</h3>
-<h2>Newton's Shell Theorem</h2>
-
-<p>Newton proved two facts about spherical shells of uniform density:</p>
-
-<p><strong>Fact 1:</strong> A uniform spherical shell exerts zero gravitational force on any particle inside it. Every pull from one side is exactly cancelled by the pull from the other.</p>
-
-<p><strong>Fact 2:</strong> A uniform spherical shell attracts a particle outside it as if all the shell's mass were concentrated at its centre.</p>
-
-<p>These two facts together have a remarkable consequence. When you are at radius $r$ inside the Earth (assuming uniform density $\rho$), all the mass in shells above you — the entire spherical shell from $r$ to $R_{\oplus}$ — exerts no net force on you. Only the mass <em>below</em> you matters, and by Fact 2, it acts as if concentrated at the centre.</p>
-
-<!-- SHELL THEOREM VISUALISATION -->
-<div class="panel">
-  <div class="panel-head"><span class="pip"></span> Newton's Shell Theorem</div>
-  <div class="panel-body">
-    <canvas id="shellCanvas" width="880" height="380" style="width:100%;height:auto;background:#1e1a14;"></canvas>
-    <div class="ctrls">
-      <label>Your depth (r/R)
-        <input type="range" id="shellR" min="0.05" max="0.98" step="0.01" value="0.6">
-        <span class="v" id="shellRVal">r/R = 0.60</span>
-      </label>
-    </div>
-    <p class="cap">Blue: the mass below you, which <em>does</em> pull you toward the centre. Grey: the shells above you, which exert zero net force. As you move inward, the active mass shrinks as $r^3$.</p>
-  </div>
-</div>
-
-<h3>The Calculation</h3>
-<h2>How Density Becomes Force</h2>
-
-<p>The mass enclosed within radius $r$ is the volume of a sphere times the density:</p>
-
-<div class="eq">
-  <div class="label">Enclosed mass</div>
-  $$M(r) = \frac{4}{3}\pi r^3 \rho$$
-</div>
-
-<p>The gravitational force on a particle of mass $m$ at this radius, by Fact 2, is:</p>
-
-<div class="eq">
-  $$F = -\frac{GM(r)\,m}{r^2} = -\frac{G \cdot \frac{4}{3}\pi r^3 \rho \cdot m}{r^2} = -\frac{4\pi G\rho}{3}\,m\,r$$
-</div>
-
-<p>Look at what happened. The $r^3$ from the enclosed mass and the $r^2$ in the denominator of Newton's law of gravitation leave a single power of $r$. The force is <em>proportional to displacement from the centre</em>:</p>
-
-<div class="eq">
-  <div class="label">Hooke's law — from gravity!</div>
-  $$F = -kr, \qquad k = \frac{4\pi G\rho\, m}{3}$$
-</div>
-
-<p>This is exactly Hooke's law: $F = -kr$. The "spring constant" is set by the density of the Earth and the gravitational constant. Inside a uniform sphere, gravity behaves like a spring.</p>
-
-<div class="pullquote">The shell theorem translates a uniform density into a linear restoring force. Gravity inside a sphere <em>is</em> a harmonic oscillator.</div>
-
-<p><span class="ib-tag sl">IB Physics SL/HL</span> The period of this oscillation is $T = 2\pi\sqrt{m/k} = 2\pi\sqrt{3/(4\pi G\rho)}$. For Earth's mean density ($\rho \approx 5500\;\text{kg/m}^3$), this gives $T \approx 84$ minutes — the same as a low-Earth orbit. That's not a coincidence.</p>
-
-<!-- ELEVATOR ANIMATION -->
-<div class="panel">
-  <div class="panel-head"><span class="pip"></span> Falling Through the Earth</div>
-  <div class="panel-body">
-    <canvas id="elevCanvas" width="880" height="380" style="width:100%;height:auto;background:#1e1a14;"></canvas>
-    <div class="ctrls">
-      <button id="elevBtn" class="on" onclick="toggleElev()">▶ Play / Pause</button>
-      <button onclick="resetElev()">Reset</button>
-      <label style="flex-direction:row;gap:8px;align-items:center;">
-        <input type="checkbox" id="showPhase" checked> Show phase diagram
-      </label>
-    </div>
-    <p class="cap">Left: the particle oscillating through the Earth (blue = active mass). Centre: position vs time — pure sinusoidal SHM. Right: phase portrait ($v$ vs $r$), a perfect ellipse.</p>
-  </div>
-</div>
-
-<div class="sep"></div>
-
-<h3>From Falling to Orbiting</h3>
-<h2>The Breathing Orbit</h2>
-
-<p>Now instead of dropping straight through, imagine throwing the particle sideways. It doesn't fall through the centre — it orbits. But the orbit isn't perfectly circular (unless you throw at exactly the right speed). A slightly eccentric orbit breathes: the distance oscillates between a closest approach and a farthest point.</p>
-
-<p>We can track this breathing through the <strong>moment of inertia</strong> about the force centre:</p>
-
-<div class="eq">
-  $$I = mr^2$$
-</div>
-
-<p>For a circular orbit, $I$ is constant. For an eccentric orbit, $I$ oscillates — and the frequency of that oscillation tells us something deep about the force law.</p>
-
-<p><span class="ib-tag hl">IB Physics HL</span> Differentiate $I = mr^2$ twice:</p>
-
-<div class="eq">
-  $$\dot{I} = 2mr\dot{r}, \qquad \ddot{I} = 2m(\dot{r}^2 + r\ddot{r})$$
-</div>
-
-<p>Now substitute the radial equation of motion. In polar coordinates, $m\ddot{r} = f(r) + L^2/(mr^3)$, where $L$ is the conserved angular momentum. Multiplying by $r$ and substituting:</p>
-
-<div class="eq">
-  <div class="label">The breathing equation</div>
-  $$\ddot{I} = 4T - 2rV'(r)$$
-</div>
-
-<p>where $T = \frac{1}{2}m\dot{r}^2 + \frac{L^2}{2mr^2}$ is the total kinetic energy. The two terms on the right compete: kinetic energy drives expansion (the orbit inflates), while the potential gradient drives contraction (gravity pulls it back). An eccentric orbit breathes because these two effects alternate in dominance.</p>
-
-<!-- ORBIT BREATHING PANEL -->
-<div class="panel">
-  <div class="panel-head"><span class="pip"></span> Orbit Breathing: Moment of Inertia</div>
-  <div class="panel-body">
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;">
-      <canvas id="orbCanvas" width="500" height="400" style="width:100%;height:auto;background:#1e1a14;"></canvas>
-      <canvas id="moiCanvas" width="380" height="400" style="width:100%;height:auto;background:#1e1a14;"></canvas>
-    </div>
-    <div class="ctrls">
-      <label>Force law exponent $n$
-        <input type="range" id="nSlider" min="-1.5" max="3" step="0.01" value="-1">
-        <span class="v" id="nVal">n = −1 (gravity)</span>
-      </label>
-      <label>Eccentricity
-        <input type="range" id="orbEcc" min="0.05" max="0.6" step="0.01" value="0.25">
-        <span class="v" id="orbEccVal">e = 0.25</span>
-      </label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="on" onclick="setOrb(-1,0.25)">Gravity $1/r$</button>
-        <button onclick="setOrb(2,0.25)">Harmonic $r^2$</button>
-        <button onclick="setOrb(0.5,0.3)">Custom</button>
+  <!-- 1. REPRESENTATION -->
+  <section id="representation">
+    <div class="section-label">Part 1</div>
+    <h2>Everything is a representation</h2>
+    <div class="card">
+      <p>
+        Magritte's painting carries the caption <em>"Ceci n'est pas une pipe"</em> — this is not a pipe.
+        He was right: it is pigment on canvas arranged to trigger your "pipe" model.
+        You cannot pack it with tobacco.
+      </p>
+      <p>
+        The same move applies everywhere in physics.
+        A plotted waveform is not a wave. A spectrogram is not a sound.
+        An audio rendering of LIGO strain data is not "the sound of spacetime."
+        Each is a <strong>representation</strong> — a mapping from one domain into another
+        that our senses can parse.
+      </p>
+      <div class="callout tok">
+        <h4>TOK question</h4>
+        <p>If every observation is mediated by a representation, can we ever access "the thing itself"? Or is the question itself confused?</p>
       </div>
     </div>
-    <p class="cap">Left: the orbit for potential $V \propto r^n$. Right: $I(\theta) - I_0$, showing the breathing. For $n = -1$ (gravity), $\beta = 1$: one breath per orbit, closed ellipse. For $n = 2$ (harmonic), $\beta = 2$: two breaths, centred ellipse.</p>
-  </div>
-</div>
+  </section>
 
-<div class="sep"></div>
+  <!-- 2. PATTERN COMPLETION -->
+  <section id="pattern">
+    <div class="section-label">Part 2</div>
+    <h2>Your brain fills gaps: pattern completion &amp; model lock-in</h2>
+    <div class="grid2">
 
-<h3>The Virial Theorem (in one paragraph)</h3>
-<h2>Energy Balance from Breathing</h2>
+      <div class="card">
+        <h3>The Dalmatian illusion</h3>
+        <figure>
+          <div class="dalmatian-wrap" id="dalmatianWrap">
+            <img src="dalmation.png" alt="Dalmatian dog illusion" />
+            <svg class="dalmatian-overlay" id="dalmatianOverlay" viewBox="0 0 1000 780" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M380,620 Q350,580 340,540 Q330,500 350,460 Q360,430 380,410 Q400,390 420,370
+                       Q440,350 460,340 Q490,330 520,320 Q550,310 580,300 Q610,290 630,280
+                       Q650,270 660,250 Q670,230 665,210 Q660,190 650,180 Q640,170 620,165
+                       Q600,160 590,170 Q580,180 575,195 Q570,210 555,220 Q540,225 530,215
+                       Q525,200 530,185 Q535,170 550,160 Q565,150 580,145 Q600,140 620,145
+                       Q645,150 665,165 Q685,180 690,205 Q695,230 685,260 Q675,285 655,305
+                       Q640,320 620,340 Q600,360 575,380 Q550,400 530,420 Q510,440 495,465
+                       Q480,490 475,520 Q470,550 475,580 Q478,600 490,620"
+                    fill="none" stroke="#ff3333" stroke-width="4" stroke-dasharray="12 6" opacity="0.85"/>
+              <circle cx="620" cy="200" r="55" fill="none" stroke="#ff3333" stroke-width="3" stroke-dasharray="8 4" opacity="0.7"/>
+              <text x="620" y="130" text-anchor="middle" fill="#ff3333" font-family="JetBrains Mono,monospace" font-size="22" font-weight="bold" opacity="0.9">DOG</text>
+            </svg>
+          </div>
+          <figcaption>Black-and-white blotches. Once you see the dog, you cannot unsee it.</figcaption>
+        </figure>
+        <button class="toggle-btn" id="dalmatianBtn" onclick="toggleDalmatian()">
+          <span class="dot"></span> Reveal outline
+        </button>
+        <p>
+          The raw data: irregular black regions on white. No outlines, no labels.
+          Yet your visual cortex imposes a "dog" template — closure, continuity, familiar shape —
+          and suddenly the dalmatian is <em>obvious</em>.
+        </p>
+        <p>
+          This is <strong>model lock-in</strong>: once a perceptual model activates, it restructures the data.
+          Same pixels; entirely different experience.
+        </p>
+      </div>
 
-<p>The breathing equation has a beautiful consequence. Over one complete orbit, $I$ returns to its starting value, so $\langle\ddot{I}\rangle = 0$. For a power-law potential $V \propto r^n$, the term $rV'(r) = nV(r)$, and the breathing equation gives:</p>
+      <div class="card">
+        <h3>Kanizsa triangle (closure)</h3>
+        <figure>
+          <img src="kaniza.png" alt="Kanizsa triangle — illusory contours" />
+          <figcaption>Do you see a white triangle? Where are its edges? Your brain constructs contours that don't exist in the pixel data.</figcaption>
+        </figure>
+        <div class="callout prompt">
+          <h4>Discuss</h4>
+          <p>Before you were told "dalmatian," what did you see? After? What changed — the image or you?</p>
+        </div>
+        <p>
+          Human perception is not a passive camera. It is a <em>prediction-and-correction</em> system:
+          expectations (models) meet incoming data, and the brain settles on the interpretation
+          that best explains the input given its priors.
+        </p>
+        <p>
+          This is powerful — it lets us see in dim light, parse speech in noise, spot a fox by the bins at dusk.
+          But it also means <strong>observation is never neutral</strong>.
+        </p>
+      </div>
 
-<div class="eq">
-  <div class="label">The virial theorem</div>
-  $$2\langle T \rangle = n\langle V \rangle$$
-</div>
-
-<p>For gravity ($n = -1$): $\langle T \rangle = -\frac{1}{2}\langle V \rangle$, so bound orbits have negative total energy. For the harmonic oscillator ($n = 2$): $\langle T \rangle = \langle V \rangle$ — equipartition, just as for a mass on a spring. The virial theorem falls straight out of the breathing equation. We will use it below.</p>
-
-<div class="sep"></div>
-
-<h3>The Payoff</h3>
-<h2>Galaxy Rotation Curves</h2>
-
-<p>Now we can put the shell theorem to work on a real astrophysical problem. Consider a star orbiting at radius $r$ inside a galaxy with some density profile $\rho(r)$. The shell theorem tells us only the mass <em>inside</em> the orbit matters:</p>
-
-<div class="eq">
-  $$M(r) = 4\pi\int_0^r \rho(r')\,r'^2\,dr'$$
-</div>
-
-<p>For a circular orbit at radius $r$, the gravitational pull must provide the centripetal acceleration:</p>
-
-<div class="eq">
-  $$\frac{v^2}{r} = \frac{GM(r)}{r^2} \implies v(r) = \sqrt{\frac{GM(r)}{r}}$$
-</div>
-
-<p>This is the <strong>rotation curve</strong>: the orbital velocity as a function of radius. Its shape depends entirely on how $M(r)$ grows — which depends on $\rho(r)$.</p>
-
-<div class="thought-box">
-  <div class="tag">Three limiting cases</div>
-  <p style="margin:0;"><strong>Point mass</strong> ($M$ = const for $r > 0$): $v \propto r^{-1/2}$ — the Keplerian falloff. This is what the solar system does.<br>
-  <strong>Uniform density</strong> ($\rho$ = const): $M \propto r^3$, so $v \propto r$ — velocity increases linearly. This is the harmonic oscillator regime from Section 2.<br>
-  <strong>Isothermal halo</strong> ($\rho \propto 1/r^2$): $M \propto r$, so $v$ = const — a flat rotation curve.</p>
-</div>
-
-<p>In real galaxies, most of the visible light (stars, gas) is concentrated near the centre. If this visible matter were all there is, we would expect the rotation curve to rise in the inner region (where the star is inside an extended mass distribution) and then fall off as $1/\sqrt{r}$ in the outer region (where almost all the mass is inside the orbit). This is the <em class="term">Keplerian prediction</em>.</p>
-
-<p>What is actually observed is dramatically different. Rotation curves stay flat — $v \approx$ const — out to the largest radii that can be measured. This is the most striking evidence that either there is a large amount of unseen mass (dark matter) extending far beyond the visible disc, or the law of gravity itself is modified at these scales.</p>
-
-<!-- ROTATION CURVE PANEL -->
-<div class="panel">
-  <div class="panel-head"><span class="pip"></span> Galaxy Rotation Curves: Shell Theorem vs Observation</div>
-  <div class="panel-body">
-    <canvas id="rotCanvas" width="880" height="440" style="width:100%;height:auto;background:#1e1a14;"></canvas>
-    <div class="ctrls">
-      <label>Visible disc scale length
-        <input type="range" id="discScale" min="0.5" max="5" step="0.1" value="2">
-        <span class="v" id="discScaleVal">R_d = 2.0 kpc</span>
-      </label>
-      <label>Dark matter halo
-        <select id="haloType">
-          <option value="none">None (visible only)</option>
-          <option value="isothermal">Isothermal (ρ ∝ 1/r²)</option>
-          <option value="nfw">NFW profile</option>
-          <option value="flat" selected>Match to flat curve</option>
-        </select>
-      </label>
-      <label style="flex-direction:row;gap:8px;align-items:center;">
-        <input type="checkbox" id="showObs" checked> Show observed (flat)
-      </label>
-      <label style="flex-direction:row;gap:8px;align-items:center;">
-        <input type="checkbox" id="showComponents"> Show components
-      </label>
     </div>
-    <p class="cap">The solid curve shows $v(r) = \sqrt{GM(r)/r}$ computed from the shell theorem for the chosen density profile. The dashed line shows the observed flat rotation curve. The gap between them is the "missing mass problem."</p>
-  </div>
-</div>
+  </section>
 
-<p><span class="ib-tag hl">IB Physics HL</span> The shell theorem calculation above assumed spherical symmetry. Real galaxy discs are flattened, so the full calculation is more complex, but the essential physics is the same: $v(r)$ depends on $M(r)$, and $M(r)$ depends on $\rho(r)$. The flatness of the observed rotation curve implies $M(r) \propto r$ at large radii, which requires $\rho \propto 1/r^2$ — a density profile that extends far beyond the visible disc.</p>
+  <!-- 3. CHIRPS -->
+  <section id="chirps">
+    <div class="section-label">Part 3</div>
+    <h2>Two chirps: one literal, one translated</h2>
+    <div class="grid2">
 
-<p><span class="ib-tag al">A-Level Further</span> The virial theorem connects here too. For a flat rotation curve ($v$ = const), the potential is logarithmic: $V(r) \propto \ln r$. This doesn't fit the power-law virial theorem $2\langle T\rangle = n\langle V\rangle$ because $\ln r$ is not a power law. The logarithmic potential sits at the boundary of the virial classification — another hint that flat rotation curves represent a qualitative transition in gravitational dynamics.</p>
+      <div class="card">
+        <h3>Chirp A — a bird</h3>
+        <p>
+          A microphone records pressure waves in air. When you press play, your speakers
+          recreate those waves and your ear responds.
+          Chain: <strong>air → microphone → file → speaker → air → cochlea</strong>.
+        </p>
+        <audio controls preload="none" src="bird-chirp.mp3"></audio>
+        <p style="font-size:0.82rem; color:var(--col-muted); margin-top:0.2rem;">
+          Recording of acoustic pressure waves in air.
+        </p>
+        <div class="callout prompt">
+          <h4>Prompt</h4>
+          <p>Is any "model" needed to call this a bird chirp? What model (species recognition, pattern memory, categorisation)?</p>
+        </div>
+      </div>
 
-<div class="sep"></div>
+      <div class="card">
+        <h3>Chirp B — a gravitational wave</h3>
+        <p>
+          LIGO measures length changes of ~10<sup>−21</sup> m in a 4 km interferometer arm.
+          The raw output is <strong>strain vs time</strong>.
+          Scientists mapped this into audible frequencies so humans can perceive the pattern.
+          Space did not "make a sound."
+        </p>
+        <figure>
+          <img src="chirpLaden.png" alt="GW150914 waveform with numerical relativity overlay" />
+          <figcaption>GW150914: reconstructed waveform (grey) overlaid with numerical relativity prediction (red). Below: separation and velocity approaching <em>c</em>.</figcaption>
+        </figure>
+        <p><strong>GW150914</strong> — September 2015:</p>
+        <audio controls preload="none" src="https://www.ligo.caltech.edu/system/media_files/binaries/334/original/LIGO_Sept_2015.mp3?1465951523="></audio>
+        <p><strong>GW151226</strong> — December 2015:</p>
+        <audio controls preload="none" src="https://www.ligo.caltech.edu/system/media_files/binaries/337/original/LIGO_Dec_2015.mp3?1466014968="></audio>
+        <p class="magritte-caption">"Ceci n'est pas un chirp."</p>
+        <p style="text-align:center; font-size:0.92rem; color:var(--col-muted);">
+          It is a <em>sonification</em> of a <em>reconstructed signal</em> extracted from
+          interferometer noise using templates derived from general relativity.
+        </p>
+      </div>
 
-<h2>The Thread</h2>
+    </div>
+  </section>
 
-<p>Let's trace the thread from beginning to end:</p>
+  <!-- 3b. MATCHED FILTER INTERACTIVE -->
+  <section id="filter-demo">
+    <div class="section-label">Interactive</div>
+    <h2>Matched filtering: signal in noise</h2>
+    <div class="card">
+      <p>
+        Raw LIGO data looks like random noise. A <strong>matched filter</strong> cross-correlates the data
+        with GR-predicted waveform templates. When the template matches, the signal emerges —
+        just as the dalmatian emerges from blotches once you have the "dog" model.
+      </p>
+      <p>Toggle the filter to see the chirp appear and disappear:</p>
 
-<p>The shell theorem says that inside a uniform sphere, the gravitational force is proportional to distance: $F \propto r$. This is Hooke's law — a harmonic oscillator with $V \propto r^2$. So falling through the Earth produces simple harmonic motion.</p>
+      <button class="toggle-btn" id="filterBtn" onclick="toggleFilter()">
+        <span class="dot"></span> Matched filter: OFF
+      </button>
 
-<p>For an orbit (sideways motion added), the same force law determines how the orbit breathes. The frequency parameter $\beta = \sqrt{n+2}$ (where $n$ is the potential exponent) tells us how many times the orbit breathes per revolution. For gravity ($n = -1$), $\beta = 1$: one breath, closed orbit. For the harmonic oscillator ($n = 2$), $\beta = 2$: two breaths, also closed.</p>
+      <div class="filter-canvas-wrap">
+        <span class="filter-label" id="filterLabel">Raw strain data (noise-dominated)</span>
+        <canvas id="filterCanvas" width="1200" height="320"></canvas>
+      </div>
 
-<p>The virial theorem falls out of the breathing equation by time-averaging: $2\langle T \rangle = n\langle V \rangle$. And the rotation curve of a galaxy is the shell theorem applied at every radius: $v(r) = \sqrt{GM(r)/r}$, with $M(r)$ determined by the density profile. The discrepancy between the predicted Keplerian decline and the observed flat curve is the most direct evidence for dark matter — or for the failure of Newtonian gravity at galactic scales.</p>
+      <div class="callout tok">
+        <h4>TOK connection</h4>
+        <p>
+          The filter is not "making up" the signal — it tests whether a specific predicted shape
+          exists in the data above a statistical threshold. The template comes from GR;
+          the match is quantified by signal-to-noise ratio.
+          Is this "seeing what you expect" (like the dalmatian), or "disciplined inference"?
+          What makes the difference?
+        </p>
+      </div>
+    </div>
+  </section>
 
-<p>Four results — the shell theorem, harmonic oscillation, the virial theorem, and galaxy rotation curves — are all manifestations of the same underlying mathematics: how the enclosed mass grows with radius, and what that implies for the shape of the effective potential.</p>
+  <!-- 4. THEORY-LADENNESS -->
+  <section id="theory-laden">
+    <div class="section-label">Part 4</div>
+    <h2>Theory-ladenness: observation through a lens</h2>
+    <div class="card">
+      <p>
+        The philosopher N. R. Hanson argued that <strong>all observation is theory-laden</strong>:
+        what we <em>see</em> depends on the conceptual framework we bring.
+        Two observers can look at the same data and perceive different things —
+        not because the data differs, but because their models differ.
+      </p>
+      <div class="sep"></div>
+      <div class="grid2">
+        <div>
+          <h3>The dalmatian, again</h3>
+          <p>Before the label, you see noise. After, a dog. The label is a <em>theory</em> (a template, a prior expectation). Theory-ladenness in its purest form.</p>
+        </div>
+        <div>
+          <h3>LIGO's matched filter</h3>
+          <p>Raw LIGO data looks like noise. A <em>matched filter</em> cross-correlates the data with thousands of GR-predicted waveform templates. When a template matches, the signal emerges — just as the dalmatian emerges from the blotches.</p>
+        </div>
+      </div>
+      <div class="sep"></div>
 
-<div class="pullquote">The elevator through the Earth, the breathing orbit, and the galaxy rotation curve are not three separate problems. They are three faces of the same geometric fact — Newton's shell theorem.</div>
+      <div class="callout tok">
+        <h4>TOK provocation</h4>
+        <p>If LIGO <em>needs</em> general relativity templates to detect gravitational waves, is the detection independent evidence for GR — or is it circular?</p>
+        <p>(The answer involves the difference between using a model to <em>search</em> and using independent checks to <em>validate</em>. But the question is worth sitting with.)</p>
+      </div>
 
-<p style="font-size:15px;color:var(--muted);border-top:1px solid rgba(0,0,0,0.1);padding-top:14px;margin-top:40px;">This explainer accompanies a research paper on the Bertrand $\beta$ parameter: <a href="https://www.researchgate.net/publication/392025857" style="color:var(--accent);">"Multipole Potentials as Deformations of Bertrand Fixed Points"</a> by Lee McCulloch-James (2025). For the full interactive review, see the companion article.</p>
+      <h3>The pipeline of representation</h3>
+      <p>Every step in the LIGO detection chain is a translation:</p>
+      <table>
+        <tr><th>Step</th><th>What happens</th><th>What it is not</th></tr>
+        <tr><td>Spacetime ripple</td><td>Metric perturbation propagates at <em>c</em></td><td>Not a "sound" — no medium vibrates acoustically</td></tr>
+        <tr><td>Interferometer</td><td>Differential arm-length change → photodiode current</td><td>Not a direct photograph of a wave</td></tr>
+        <tr><td>Strain time-series</td><td>Calibrated dimensionless data <em>h(t)</em></td><td>Not yet a detection — dominated by noise</td></tr>
+        <tr><td>Matched filtering</td><td>Cross-correlation with GR template bank → SNR peak</td><td>Not "seeing the wave" — statistical inference</td></tr>
+        <tr><td>Sonification</td><td>Frequency-shifted audio for human ears</td><td>Not "the sound of spacetime" — a pedagogical mapping</td></tr>
+      </table>
+      <div class="callout prompt" style="margin-top:1rem;">
+        <h4>Prompt</h4>
+        <p>At which step does "observation" occur? Or does the question assume a false binary between observing and constructing?</p>
+      </div>
+    </div>
+  </section>
 
-</article>
+  <!-- 5. CRITERIA -->
+  <section id="criteria">
+    <div class="section-label">Part 5</div>
+    <h2>From projection to knowledge: what earns trust?</h2>
+    <div class="card">
+      <p>
+        If observation is always filtered, model-laden, and representational, then how is science
+        different from seeing shapes in clouds? The answer: <strong>constraints</strong>.
+      </p>
+      <table>
+        <thead><tr><th>Criterion</th><th>What it means</th><th>LIGO chirp example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Constraint</strong></td><td>Physical/mathematical rules limit allowable interpretations</td><td>Templates from GR field equations — not free parameters</td></tr>
+          <tr><td><strong>Prediction</strong></td><td>The model makes risky forecasts that could fail</td><td>Chirp mass, spin, luminosity distance — predicted before parameter estimation</td></tr>
+          <tr><td><strong>Independence</strong></td><td>Cross-check with different instruments or data</td><td>Two detectors (Hanford + Livingston); Virgo; EM counterpart for GW170817</td></tr>
+          <tr><td><strong>Reproducibility</strong></td><td>Others re-run the pipeline and converge</td><td>Multiple pipelines (PyCBC, GstLAL); public data releases</td></tr>
+          <tr><td><strong>Uncertainty</strong></td><td>Quantified error bars and false-alarm rates</td><td>GW150914: false-alarm rate &lt; 1 in 200,000 years; SNR ≈ 24</td></tr>
+        </tbody>
+      </table>
+      <div class="callout tok" style="margin-top:1rem;">
+        <h4>Key distinction</h4>
+        <p>The dalmatian illusion has <em>none</em> of these constraints — which is why it's a projection. LIGO has <em>all five</em> — which is why it's knowledge (provisional, model-dependent, but earned).</p>
+      </div>
 
+      <h3>Optional extension: gravitational lensing as visual reconstruction</h3>
+      <div class="grid2">
+        <div class="placeholder"><strong>📷 Placeholder: Lensing — raw image</strong><br/>Add as <code>lensing_before.jpg</code></div>
+        <div class="placeholder"><strong>📷 Placeholder: Lensing — reconstructed arcs</strong><br/>Add as <code>lensing_after.jpg</code></div>
+      </div>
+      <p style="margin-top:0.6rem;">The Einstein ring is in the world, but becomes <em>visible to us</em> only through constrained reconstruction.</p>
+    </div>
+  </section>
+
+  <!-- 6. EXIT TICKET -->
+  <section id="exit">
+    <div class="section-label">Exit ticket</div>
+    <h2>Five lines, then a paragraph</h2>
+    <div class="card">
+      <div class="callout prompt">
+        <h4>Quick-fire (one sentence each)</h4>
+        <ol style="margin:0.3rem 0 0 1.2rem;">
+          <li>One way the bird chirp is "direct."</li>
+          <li>One way the gravitational chirp is "indirect."</li>
+          <li>One model assumption involved in LIGO detection.</li>
+          <li>One reason scientists translate data into sound or plots.</li>
+          <li>Complete: <em>"Observation is…"</em></li>
+        </ol>
+      </div>
+      <div class="callout tok" style="margin-top:1rem;">
+        <h4>Extended writing (8–10 sentences)</h4>
+        <p>Choose either the gravitational-wave chirp or the dalmatian illusion. Explain how it is a <em>representation</em>, how it is <em>theory-laden</em>, and defend why it does (or does not) count as <em>knowledge</em>. Use at least three criteria from the table above.</p>
+      </div>
+      <div class="sep"></div>
+      <p style="text-align:center; font-style:italic; color:var(--col-muted);">"The map is not the territory. But a good map lets you navigate."</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p><strong>Teacher notes:</strong> Anchor the anti-relativism point explicitly — science is model-laden but not arbitrary. Reality constrains models through predictive failure, cross-checks, and quantified uncertainty.</p>
+</footer>
+
+<!-- ═══ SCRIPTS ═══ -->
 <script>
-// ============================================================
-// SHELL THEOREM
-// ============================================================
-const shC = document.getElementById('shellCanvas');
-const shX = shC.getContext('2d');
-
-function drawShell() {
-  const W = shC.width, H = shC.height;
-  shX.fillStyle = '#1e1a14';
-  shX.fillRect(0, 0, W, H);
-
-  const cx = W * 0.4, cy = H / 2;
-  const R = Math.min(W * 0.35, H * 0.42);
-  const rFrac = parseFloat(document.getElementById('shellR').value);
-  document.getElementById('shellRVal').textContent = `r/R = ${rFrac.toFixed(2)}`;
-  const r = R * rFrac;
-
-  // Outer earth - inactive shells (grey)
-  shX.strokeStyle = 'rgba(255,255,255,0.08)';
-  shX.lineWidth = 1;
-  for (let i = 0; i < 20; i++) {
-    const rr = R * (rFrac + (1 - rFrac) * i / 19);
-    shX.beginPath();
-    shX.arc(cx, cy, rr, 0, Math.PI * 2);
-    shX.stroke();
-  }
-  // Fill outer shell
-  shX.globalAlpha = 0.12;
-  shX.fillStyle = '#888';
-  shX.beginPath();
-  shX.arc(cx, cy, R, 0, Math.PI * 2);
-  shX.arc(cx, cy, r, 0, Math.PI * 2, true);
-  shX.fill();
-  shX.globalAlpha = 1;
-
-  // Inner earth - active mass (blue)
-  const grad = shX.createRadialGradient(cx, cy, 0, cx, cy, r);
-  grad.addColorStop(0, 'rgba(27,94,138,0.5)');
-  grad.addColorStop(1, 'rgba(27,94,138,0.2)');
-  shX.fillStyle = grad;
-  shX.beginPath();
-  shX.arc(cx, cy, r, 0, Math.PI * 2);
-  shX.fill();
-  shX.strokeStyle = 'rgba(27,94,138,0.6)';
-  shX.lineWidth = 2;
-  shX.stroke();
-
-  // Particle
-  const px = cx + r, py = cy;
-  shX.fillStyle = '#b8390e';
-  shX.beginPath();
-  shX.arc(px, py, 6, 0, Math.PI * 2);
-  shX.fill();
-
-  // Force arrow
-  const fMag = rFrac; // F ∝ r
-  const arrowLen = fMag * 60;
-  if (arrowLen > 5) {
-    shX.strokeStyle = '#b8390e';
-    shX.lineWidth = 2.5;
-    shX.beginPath();
-    shX.moveTo(px, py);
-    shX.lineTo(px - arrowLen, py);
-    shX.stroke();
-    // arrowhead
-    shX.fillStyle = '#b8390e';
-    shX.beginPath();
-    shX.moveTo(px - arrowLen - 8, py);
-    shX.lineTo(px - arrowLen + 2, py - 5);
-    shX.lineTo(px - arrowLen + 2, py + 5);
-    shX.fill();
-  }
-
-  // Centre dot
-  shX.fillStyle = '#c4930a';
-  shX.beginPath();
-  shX.arc(cx, cy, 3, 0, Math.PI * 2);
-  shX.fill();
-
-  // Earth outline
-  shX.strokeStyle = 'rgba(255,255,255,0.15)';
-  shX.lineWidth = 1.5;
-  shX.beginPath();
-  shX.arc(cx, cy, R, 0, Math.PI * 2);
-  shX.stroke();
-
-  // Right side: F(r) graph
-  const gx = W * 0.68, gy = 40, gw = W * 0.26, gh = H - 80;
-  shX.strokeStyle = 'rgba(255,255,255,0.2)';
-  shX.lineWidth = 1;
-  shX.beginPath();
-  shX.moveTo(gx, gy); shX.lineTo(gx, gy + gh); shX.lineTo(gx + gw, gy + gh);
-  shX.stroke();
-
-  // F ∝ r line
-  shX.strokeStyle = '#1b5e8a';
-  shX.lineWidth = 2;
-  shX.beginPath();
-  shX.moveTo(gx, gy + gh);
-  shX.lineTo(gx + gw, gy + gh - gh * 0.8);
-  shX.stroke();
-
-  // Current point
-  const gpx = gx + rFrac * gw;
-  const gpy = gy + gh - rFrac * gh * 0.8;
-  shX.fillStyle = '#b8390e';
-  shX.beginPath();
-  shX.arc(gpx, gpy, 5, 0, Math.PI * 2);
-  shX.fill();
-
-  // Labels
-  shX.fillStyle = 'rgba(255,255,255,0.5)';
-  shX.font = '12px "Outfit", sans-serif';
-  shX.textAlign = 'center';
-  shX.fillText('r/R', gx + gw / 2, gy + gh + 24);
-  shX.fillText('|F|', gx - 16, gy + gh / 2);
-  shX.fillText('F ∝ r', gx + gw * 0.7, gy + gh * 0.25);
-
-  // Mass info
-  const massFrac = rFrac * rFrac * rFrac;
-  shX.fillStyle = '#1b5e8a';
-  shX.font = 'bold 14px "Fira Code", monospace';
-  shX.textAlign = 'left';
-  shX.fillText(`M(r)/M = ${massFrac.toFixed(3)}`, 16, 28);
-  shX.fillStyle = 'rgba(255,255,255,0.4)';
-  shX.font = '12px "Outfit", sans-serif';
-  shX.fillText(`(r/R)³ = ${rFrac.toFixed(2)}³`, 16, 48);
+// ── Dalmatian outline toggle ──
+function toggleDalmatian() {
+  const overlay = document.getElementById('dalmatianOverlay');
+  const btn = document.getElementById('dalmatianBtn');
+  const on = overlay.classList.toggle('visible');
+  btn.classList.toggle('active', on);
+  btn.innerHTML = on
+    ? '<span class="dot"></span> Outline ON (model applied)'
+    : '<span class="dot"></span> Reveal outline';
 }
-document.getElementById('shellR').addEventListener('input', drawShell);
-drawShell();
 
-// ============================================================
-// ELEVATOR SHM
-// ============================================================
-const elC = document.getElementById('elevCanvas');
-const elX = elC.getContext('2d');
-let elevT = 0, elevRunning = true, elevAnim;
+// ── Matched filter demo ──
+const canvas = document.getElementById('filterCanvas');
+const ctx = canvas.getContext('2d');
+let filterOn = false;
 
-function toggleElev() { elevRunning = !elevRunning; }
-function resetElev() { elevT = 0; }
+const N = canvas.width;
+const noise = new Float32Array(N);
+const chirpSignal = new Float32Array(N);
+const combined = new Float32Array(N);
 
-function drawElev() {
-  const W = elC.width, H = elC.height;
-  elX.fillStyle = '#1e1a14';
-  elX.fillRect(0, 0, W, H);
+// Seeded PRNG for reproducibility
+let seed = 42;
+function rng() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+function gaussRng() {
+  const u1 = rng(), u2 = rng();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
 
-  if (elevRunning) elevT += 0.02;
-  const r = Math.cos(elevT); // r/R, oscillates -1 to 1
-  const v = -Math.sin(elevT); // velocity (normalised)
+// Build noise
+for (let i = 0; i < N; i++) noise[i] = gaussRng() * 0.85;
 
-  // ---- SECTION 1: Earth cross-section (left) ----
-  const ecx = 140, ecy = H / 2, eR = 140;
-
-  // Inactive shells
-  elX.strokeStyle = 'rgba(255,255,255,0.05)';
-  elX.lineWidth = 1;
-  for (let i = 0; i < 8; i++) {
-    const rr = eR * (0.3 + 0.7 * i / 7);
-    elX.beginPath();
-    elX.arc(ecx, ecy, rr, 0, Math.PI * 2);
-    elX.stroke();
+// Build inspiral chirp centred at ~72% of canvas
+const ctr = Math.floor(N * 0.72);
+const half = Math.floor(N * 0.22);
+for (let i = 0; i < N; i++) {
+  const t = (i - ctr) / half;
+  if (Math.abs(t) < 1) {
+    const phase = t < 0
+      ? 2 * Math.PI * (3*t + 6*t*t + 4*t*t*t)
+      : 2 * Math.PI * (3*t - 2*t*t) * Math.exp(-3*t);
+    const amp = t < 0
+      ? 0.35 + 0.65 * (1+t)*(1+t)
+      : Math.exp(-4*t);
+    chirpSignal[i] = amp * Math.sin(phase * 12) * 1.1;
   }
+}
 
-  // Active mass (below particle)
-  const rAbs = Math.abs(r);
-  if (rAbs > 0.02) {
-    const grad = elX.createRadialGradient(ecx, ecy, 0, ecx, ecy, eR * rAbs);
-    grad.addColorStop(0, 'rgba(27,94,138,0.5)');
-    grad.addColorStop(1, 'rgba(27,94,138,0.15)');
-    elX.fillStyle = grad;
-    elX.beginPath();
-    elX.arc(ecx, ecy, eR * rAbs, 0, Math.PI * 2);
-    elX.fill();
-  }
+for (let i = 0; i < N; i++) combined[i] = noise[i] + chirpSignal[i];
 
-  // Earth outline
-  elX.strokeStyle = 'rgba(255,255,255,0.15)';
-  elX.lineWidth = 1.5;
-  elX.beginPath();
-  elX.arc(ecx, ecy, eR, 0, Math.PI * 2);
-  elX.stroke();
+function draw() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, w, h);
 
-  // Tunnel line
-  elX.strokeStyle = 'rgba(255,255,255,0.05)';
-  elX.lineWidth = 8;
-  elX.beginPath();
-  elX.moveTo(ecx, ecy - eR - 5);
-  elX.lineTo(ecx, ecy + eR + 5);
-  elX.stroke();
-
-  // Particle on tunnel
-  const py = ecy - r * eR;
-  elX.fillStyle = '#b8390e';
-  elX.beginPath();
-  elX.arc(ecx, py, 8, 0, Math.PI * 2);
-  elX.fill();
-  elX.fillStyle = '#fff';
-  elX.beginPath();
-  elX.arc(ecx, py, 3, 0, Math.PI * 2);
-  elX.fill();
-
-  // Centre dot
-  elX.fillStyle = 'rgba(196,147,10,0.6)';
-  elX.beginPath();
-  elX.arc(ecx, ecy, 3, 0, Math.PI * 2);
-  elX.fill();
-
-  // ---- SECTION 2: r(t) sinusoidal (centre) ----
-  const gx = 310, gy = 30, gw = 250, gh = H - 60;
-
-  // Axes
-  elX.strokeStyle = 'rgba(255,255,255,0.2)';
-  elX.lineWidth = 1;
-  elX.beginPath();
-  elX.moveTo(gx, gy); elX.lineTo(gx, gy + gh); elX.lineTo(gx + gw, gy + gh);
-  elX.stroke();
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  for (let x = 0; x < w; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
 
   // Zero line
-  elX.strokeStyle = 'rgba(255,255,255,0.08)';
-  elX.setLineDash([3, 3]);
-  elX.beginPath();
-  elX.moveTo(gx, gy + gh / 2);
-  elX.lineTo(gx + gw, gy + gh / 2);
-  elX.stroke();
-  elX.setLineDash([]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
 
-  // Draw the FULL sinusoidal curve (pre-computed, always visible)
-  const periods = 2.5;
-  const tTotal = periods * 2 * Math.PI;
-  elX.strokeStyle = 'rgba(184,57,14,0.25)';
-  elX.lineWidth = 1.5;
-  elX.beginPath();
-  for (let i = 0; i <= 400; i++) {
-    const tt = (i / 400) * tTotal;
-    const rr = Math.cos(tt);
-    const x = gx + (tt / tTotal) * gw;
-    const y = gy + gh / 2 - rr * gh * 0.42;
-    if (i === 0) elX.moveTo(x, y); else elX.lineTo(x, y);
-  }
-  elX.stroke();
+  const scale = h * 0.35;
 
-  // Draw the bright trace up to current time
-  const tMod = elevT % tTotal;
-  elX.strokeStyle = '#b8390e';
-  elX.lineWidth = 2.5;
-  elX.beginPath();
-  let started = false;
-  for (let i = 0; i <= 400; i++) {
-    const tt = (i / 400) * tTotal;
-    if (tt > tMod) break;
-    const rr = Math.cos(tt);
-    const x = gx + (tt / tTotal) * gw;
-    const y = gy + gh / 2 - rr * gh * 0.42;
-    if (!started) { elX.moveTo(x, y); started = true; }
-    else elX.lineTo(x, y);
-  }
-  elX.stroke();
-
-  // Tracer dot on sinusoidal
-  const tracerX = gx + (tMod / tTotal) * gw;
-  const tracerY = gy + gh / 2 - r * gh * 0.42;
-  elX.fillStyle = '#b8390e';
-  elX.beginPath();
-  elX.arc(tracerX, tracerY, 6, 0, Math.PI * 2);
-  elX.fill();
-  elX.fillStyle = '#fff';
-  elX.beginPath();
-  elX.arc(tracerX, tracerY, 2.5, 0, Math.PI * 2);
-  elX.fill();
-
-  // Horizontal dashed line connecting Earth particle to graph
-  elX.strokeStyle = 'rgba(184,57,14,0.2)';
-  elX.setLineDash([4, 4]);
-  elX.beginPath();
-  elX.moveTo(ecx + 10, py);
-  elX.lineTo(tracerX, tracerY);
-  elX.stroke();
-  elX.setLineDash([]);
-
-  // Labels
-  elX.fillStyle = 'rgba(255,255,255,0.45)';
-  elX.font = '12px "Outfit", sans-serif';
-  elX.textAlign = 'center';
-  elX.fillText('t', gx + gw / 2, gy + gh + 20);
-  elX.textAlign = 'right';
-  elX.fillText('r(t)', gx - 8, gy + 12);
-  elX.textAlign = 'left';
-  elX.fillText('+R', gx - 6, gy + gh * 0.08 + 4);
-  elX.fillText('−R', gx - 6, gy + gh * 0.92 + 4);
-
-  // ---- SECTION 3: Phase portrait (right) ----
-  if (document.getElementById('showPhase').checked) {
-    const pcx = 710, pcy = H / 2, pR = 135;
-
-    // Axes
-    elX.strokeStyle = 'rgba(255,255,255,0.15)';
-    elX.lineWidth = 1;
-    elX.beginPath();
-    elX.moveTo(pcx - pR - 15, pcy);
-    elX.lineTo(pcx + pR + 15, pcy);
-    elX.moveTo(pcx, pcy - pR - 15);
-    elX.lineTo(pcx, pcy + pR + 15);
-    elX.stroke();
-
-    // Full ellipse (faint)
-    elX.strokeStyle = 'rgba(42,122,75,0.3)';
-    elX.lineWidth = 1.5;
-    elX.beginPath();
-    for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.02) {
-      const x = pcx + Math.cos(a) * pR;
-      const y = pcy + Math.sin(a) * pR;
-      if (a === 0) elX.moveTo(x, y); else elX.lineTo(x, y);
+  if (filterOn) {
+    // Draw extracted chirp in teal
+    ctx.strokeStyle = '#5eead4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const y = h/2 - chirpSignal[i] * scale;
+      i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
     }
-    elX.stroke();
+    ctx.stroke();
 
-    // Bright trail
-    const trailLen = Math.min(elevT, Math.PI * 2);
-    elX.strokeStyle = 'rgba(42,122,75,0.7)';
-    elX.lineWidth = 2;
-    elX.beginPath();
-    let ps = false;
-    for (let dt = trailLen; dt >= 0; dt -= 0.02) {
-      const tt = elevT - dt;
-      const rr = Math.cos(tt);
-      const vv = -Math.sin(tt);
-      const x = pcx + rr * pR;
-      const y = pcy + vv * pR;
-      if (!ps) { elX.moveTo(x, y); ps = true; }
-      else elX.lineTo(x, y);
+    // Overlay GR template in red (slightly offset to show match)
+    ctx.strokeStyle = 'rgba(255,80,80,0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const y = h/2 - chirpSignal[i] * scale;
+      i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
     }
-    elX.stroke();
-
-    // Current point (synced)
-    const ppx = pcx + r * pR;
-    const ppy = pcy + v * pR;
-    elX.fillStyle = '#2a7a4b';
-    elX.beginPath();
-    elX.arc(ppx, ppy, 6, 0, Math.PI * 2);
-    elX.fill();
-    elX.fillStyle = '#fff';
-    elX.beginPath();
-    elX.arc(ppx, ppy, 2.5, 0, Math.PI * 2);
-    elX.fill();
-
-    // Labels
-    elX.fillStyle = 'rgba(255,255,255,0.4)';
-    elX.font = '12px "Outfit", sans-serif';
-    elX.textAlign = 'center';
-    elX.fillText('r', pcx + pR + 12, pcy + 16);
-    elX.fillText('v', pcx + 12, pcy - pR - 6);
-  }
-
-  elevAnim = requestAnimationFrame(drawElev);
-}
-drawElev();
-
-// ============================================================
-// ORBIT BREATHING
-// ============================================================
-const oC = document.getElementById('orbCanvas');
-const oX = oC.getContext('2d');
-const mC = document.getElementById('moiCanvas');
-const mX = mC.getContext('2d');
-
-let orbN = -1, orbE = 0.25, orbTheta = 0;
-const orbTrail = [];
-
-function setOrb(n, e) {
-  orbN = n; orbE = e;
-  document.getElementById('nSlider').value = n;
-  document.getElementById('orbEcc').value = e;
-  updateOrbLabels();
-  orbTrail.length = 0; orbTheta = 0;
-}
-
-function updateOrbLabels() {
-  const n = parseFloat(document.getElementById('nSlider').value);
-  const e = parseFloat(document.getElementById('orbEcc').value);
-  orbN = n; orbE = e;
-  const nStr = n === -1 ? 'n = −1 (gravity)' : n === 2 ? 'n = 2 (harmonic)' : `n = ${n.toFixed(2)}`;
-  document.getElementById('nVal').textContent = nStr;
-  document.getElementById('orbEccVal').textContent = `e = ${e.toFixed(2)}`;
-}
-
-document.getElementById('nSlider').addEventListener('input', () => {
-  updateOrbLabels(); orbTrail.length = 0; orbTheta = 0;
-});
-document.getElementById('orbEcc').addEventListener('input', () => {
-  updateOrbLabels(); orbTrail.length = 0; orbTheta = 0;
-});
-
-function orbR(th) {
-  const beta = Math.sqrt(Math.max(0.01, orbN + 2));
-  return 1.0 / (1 + orbE * Math.cos(beta * th));
-}
-
-function drawOrb() {
-  const W = oC.width, H = oC.height;
-  const cx = W/2, cy = H/2, sc = W * 0.28;
-
-  oX.fillStyle = 'rgba(30,26,20,0.04)';
-  oX.fillRect(0, 0, W, H);
-
-  if (orbTrail.length < 2) {
-    oX.fillStyle = '#1e1a14';
-    oX.fillRect(0, 0, W, H);
-    oX.fillStyle = '#c4930a';
-    oX.beginPath();
-    oX.arc(cx, cy, 4, 0, Math.PI * 2);
-    oX.fill();
-    oX.strokeStyle = 'rgba(255,255,255,0.04)';
-    for (let i = 1; i <= 4; i++) {
-      oX.beginPath();
-      oX.arc(cx, cy, sc * i * 0.35, 0, Math.PI * 2);
-      oX.stroke();
+    ctx.stroke();
+  } else {
+    // Draw noisy combined signal
+    ctx.strokeStyle = '#6b8aaa';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const y = h/2 - combined[i] * scale;
+      i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
     }
-  }
-
-  for (let i = 0; i < 3; i++) {
-    orbTheta += 0.018;
-    const r = orbR(orbTheta);
-    if (r > 0 && r < 8) {
-      orbTrail.push({
-        x: cx + sc * r * Math.cos(orbTheta),
-        y: cy - sc * r * Math.sin(orbTheta),
-        r, th: orbTheta
-      });
-    }
-  }
-  if (orbTrail.length > 5000) orbTrail.splice(0, 3);
-
-  if (orbTrail.length > 1) {
-    const last = orbTrail.length - 1;
-    for (let i = Math.max(0, last - 700); i < last; i++) {
-      const a = (i - Math.max(0, last - 700)) / 700;
-      oX.fillStyle = `rgba(184,57,14,${a * 0.8})`;
-      oX.fillRect(orbTrail[i].x - 0.8, orbTrail[i].y - 0.8, 1.6, 1.6);
-    }
-    const cur = orbTrail[last];
-    oX.fillStyle = '#fff';
-    oX.beginPath();
-    oX.arc(cur.x, cur.y, 4, 0, Math.PI * 2);
-    oX.fill();
-  }
-
-  // MOI panel
-  const MW = mC.width, MH = mC.height;
-  mX.fillStyle = '#1e1a14';
-  mX.fillRect(0, 0, MW, MH);
-
-  const pL = 44, pR = 16, pT = 28, pB = 36;
-  const pW = MW - pL - pR, pH = MH - pT - pB;
-
-  mX.strokeStyle = 'rgba(255,255,255,0.15)';
-  mX.lineWidth = 1;
-  mX.beginPath();
-  mX.moveTo(pL, pT); mX.lineTo(pL, pT + pH); mX.lineTo(pL + pW, pT + pH);
-  mX.stroke();
-
-  const maxTh = 4 * Math.PI;
-  const N = 300;
-  const pts = [];
-  let mn = Infinity, mx = -Infinity;
-  for (let i = 0; i <= N; i++) {
-    const th = (i / N) * maxTh;
-    const r = orbR(th);
-    const I = r * r;
-    pts.push(I);
-    if (I < mn) mn = I;
-    if (I > mx) mx = I;
-  }
-  const mid = (mn + mx) / 2, amp = (mx - mn) / 2 || 1;
-
-  mX.strokeStyle = '#b8390e';
-  mX.lineWidth = 2;
-  mX.beginPath();
-  for (let i = 0; i <= N; i++) {
-    const x = pL + (i / N) * pW;
-    const y = pT + pH/2 - ((pts[i] - mid) / amp) * pH * 0.4;
-    if (i === 0) mX.moveTo(x, y);
-    else mX.lineTo(x, y);
-  }
-  mX.stroke();
-
-  // Zero line
-  mX.strokeStyle = 'rgba(255,255,255,0.08)';
-  mX.setLineDash([3,3]);
-  mX.beginPath();
-  mX.moveTo(pL, pT + pH/2); mX.lineTo(pL + pW, pT + pH/2);
-  mX.stroke();
-  mX.setLineDash([]);
-
-  // Current marker
-  const curTh = orbTheta % maxTh;
-  const curI = orbR(orbTheta) ** 2;
-  const cx2 = pL + (curTh / maxTh) * pW;
-  const cy2 = pT + pH/2 - ((curI - mid) / amp) * pH * 0.4;
-  mX.fillStyle = '#fff';
-  mX.beginPath();
-  mX.arc(cx2, cy2, 4, 0, Math.PI * 2);
-  mX.fill();
-
-  const beta = Math.sqrt(Math.max(0.01, orbN + 2));
-  mX.fillStyle = '#c4930a';
-  mX.font = 'bold 13px "Fira Code", monospace';
-  mX.textAlign = 'left';
-  mX.fillText(`β = ${beta.toFixed(2)}`, pL + 6, pT + 14);
-  mX.font = '11px "Outfit", sans-serif';
-  mX.fillStyle = 'rgba(255,255,255,0.4)';
-  mX.fillText(`n = ${orbN.toFixed(1)}`, pL + 6, pT + 30);
-
-  mX.fillStyle = 'rgba(255,255,255,0.4)';
-  mX.font = '11px "Outfit", sans-serif';
-  mX.textAlign = 'center';
-  mX.fillText('θ', pL + pW/2, pT + pH + 22);
-
-  requestAnimationFrame(drawOrb);
-}
-drawOrb();
-
-// ============================================================
-// GALAXY ROTATION CURVES
-// ============================================================
-const rotC = document.getElementById('rotCanvas');
-const rX = rotC.getContext('2d');
-
-function expDisc(r, Rd) {
-  // Exponential disc surface density -> 3D approx
-  // ρ(r) ~ ρ0 * exp(-r/Rd)
-  // M(r) = 4π ρ0 ∫₀ʳ exp(-r'/Rd) r'² dr'
-  // = 4π ρ0 Rd³ [2 - (2 + 2r/Rd + (r/Rd)²)exp(-r/Rd)]
-  const x = r / Rd;
-  return 2 - (2 + 2*x + x*x) * Math.exp(-x);
-}
-
-function drawRotCurve() {
-  const W = rotC.width, H = rotC.height;
-  rX.fillStyle = '#1e1a14';
-  rX.fillRect(0, 0, W, H);
-
-  const Rd = parseFloat(document.getElementById('discScale').value);
-  const halo = document.getElementById('haloType').value;
-  const showObs = document.getElementById('showObs').checked;
-  const showComp = document.getElementById('showComponents').checked;
-  document.getElementById('discScaleVal').textContent = `R_d = ${Rd.toFixed(1)} kpc`;
-
-  const padL = 70, padR = 30, padT = 30, padB = 50;
-  const pW = W - padL - padR, pH = H - padT - padB;
-
-  // r range: 0 to 30 kpc
-  const rMax = 30;
-  const N = 300;
-  const vMax = 320; // km/s
-
-  function toX(r) { return padL + (r / rMax) * pW; }
-  function toY(v) { return padT + (1 - v / vMax) * pH; }
-
-  // Axes
-  rX.strokeStyle = 'rgba(255,255,255,0.25)';
-  rX.lineWidth = 1;
-  rX.beginPath();
-  rX.moveTo(padL, padT); rX.lineTo(padL, padT + pH); rX.lineTo(padL + pW, padT + pH);
-  rX.stroke();
-
-  // Grid lines
-  rX.strokeStyle = 'rgba(255,255,255,0.06)';
-  for (let v = 50; v <= 300; v += 50) {
-    rX.beginPath(); rX.moveTo(padL, toY(v)); rX.lineTo(padL + pW, toY(v)); rX.stroke();
-  }
-  for (let r = 5; r <= 25; r += 5) {
-    rX.beginPath(); rX.moveTo(toX(r), padT); rX.lineTo(toX(r), padT + pH); rX.stroke();
-  }
-
-  // Axis labels
-  rX.fillStyle = 'rgba(255,255,255,0.5)';
-  rX.font = '12px "Outfit", sans-serif';
-  rX.textAlign = 'center';
-  rX.fillText('r (kpc)', padL + pW / 2, padT + pH + 38);
-  for (let r = 0; r <= 30; r += 5) {
-    rX.fillText(r.toString(), toX(r), padT + pH + 18);
-  }
-  rX.textAlign = 'right';
-  for (let v = 0; v <= 300; v += 100) {
-    rX.fillText(v.toString(), padL - 8, toY(v) + 4);
-  }
-  rX.save();
-  rX.translate(16, padT + pH / 2);
-  rX.rotate(-Math.PI / 2);
-  rX.textAlign = 'center';
-  rX.fillText('v (km/s)', 0, 0);
-  rX.restore();
-
-  // Compute disc M(r) — normalise so disc peak = 220 km/s
-  // This represents the prediction from visible matter alone via shell theorem
-  // First pass: find peak of v²(r) unnormalised
-  let rawPeak = 0;
-  for (let i = 1; i <= N; i++) {
-    const r = (i / N) * rMax;
-    const v2raw = expDisc(r, Rd) / (r / Rd);
-    if (v2raw > rawPeak) rawPeak = v2raw;
-  }
-  const discNorm = rawPeak > 0 ? (220 * 220) / rawPeak : 1;
-
-  const discData = [];
-  for (let i = 0; i <= N; i++) {
-    const r = (i / N) * rMax;
-    const v2 = r > 0.01 ? discNorm * expDisc(r, Rd) / (r / Rd) : 0;
-    discData.push({r, v: Math.sqrt(Math.max(0, v2))});
-  }
-
-  // Compute halo contribution
-  // When halo is added, we reduce disc normalisation to ~60% of total
-  // so disc peaks at ~170 and halo fills the rest — this is physically realistic
-  // (disc alone cannot explain 220; it contributes ~60%, halo ~40% at peak,
-  //  but at large r the halo dominates)
-  const discFrac = halo === 'none' ? 1.0 : 0.6;
-  const discDataScaled = [];
-  for (let i = 0; i <= N; i++) {
-    discDataScaled.push({r: discData[i].r, v: discData[i].v * Math.sqrt(discFrac)});
-  }
-
-  const haloData = [];
-  const Rs_nfw = 10; // NFW scale radius in kpc
-  const rCore = 3; // isothermal core radius in kpc
-  for (let i = 0; i <= N; i++) {
-    const r = (i / N) * rMax;
-    let v2_halo = 0;
-    if (halo === 'isothermal') {
-      // Isothermal: ρ ∝ 1/(r²+rc²), M(r) ∝ r - rc*arctan(r/rc)
-      // v² = v_inf² * (1 - (rc/r)*arctan(r/rc))
-      const v_inf = 220 * Math.sqrt(1 - discFrac); // ~175 km/s
-      const x = r / rCore;
-      const factor = x > 0.01 ? 1 - Math.atan(x) / x : 0;
-      v2_halo = v_inf * v_inf * factor;
-    } else if (halo === 'nfw') {
-      // NFW: v² ∝ (1/x)[ln(1+x) - x/(1+x)] where x = r/Rs
-      const x = r / Rs_nfw;
-      const Mnfw = x > 0.001 ? Math.log(1 + x) - x / (1 + x) : x * x / 2;
-      // Normalise: at r=20 kpc, halo should give v² ≈ (1-discFrac)*220²
-      const x20 = 20 / Rs_nfw;
-      const M20 = Math.log(1 + x20) - x20 / (1 + x20);
-      const nfwScale = 220 * 220 * (1 - discFrac) * 20 / (Rs_nfw * M20);
-      v2_halo = r > 0.01 ? nfwScale * Rs_nfw * Mnfw / r : 0;
-    } else if (halo === 'flat') {
-      // Tuned: halo exactly fills gap to make total = 220 km/s
-      const v_disc = discDataScaled[i].v;
-      v2_halo = Math.max(0, 220 * 220 - v_disc * v_disc);
-    }
-    haloData.push({r, v: Math.sqrt(Math.max(0, v2_halo))});
-  }
-
-  // Total = disc (scaled) + halo in quadrature
-  const totalData = [];
-  const useDisc = halo === 'none' ? discData : discDataScaled;
-  for (let i = 0; i <= N; i++) {
-    const v2 = useDisc[i].v ** 2 + haloData[i].v ** 2;
-    totalData.push({r: discData[i].r, v: Math.sqrt(v2)});
-  }
-
-  // Draw observed flat curve
-  if (showObs) {
-    rX.strokeStyle = 'rgba(255,255,255,0.35)';
-    rX.lineWidth = 2;
-    rX.setLineDash([8, 6]);
-    rX.beginPath();
-    rX.moveTo(toX(0.5), toY(220));
-    rX.lineTo(toX(rMax), toY(220));
-    rX.stroke();
-    rX.setLineDash([]);
-    rX.fillStyle = 'rgba(255,255,255,0.35)';
-    rX.font = '12px "Outfit", sans-serif';
-    rX.textAlign = 'left';
-    rX.fillText('observed ≈ 220 km/s', toX(rMax * 0.6), toY(220) - 10);
-  }
-
-  // Draw components if toggled
-  if (showComp && halo !== 'none') {
-    // Disc component (scaled)
-    rX.strokeStyle = 'rgba(184,57,14,0.4)';
-    rX.lineWidth = 1.5;
-    rX.setLineDash([4, 4]);
-    rX.beginPath();
-    for (let i = 1; i <= N; i++) {
-      const x = toX(discDataScaled[i].r);
-      const y = toY(discDataScaled[i].v);
-      if (i === 1) rX.moveTo(x, y); else rX.lineTo(x, y);
-    }
-    rX.stroke();
-    rX.setLineDash([]);
-
-    // Halo component
-    rX.strokeStyle = 'rgba(42,122,75,0.4)';
-    rX.lineWidth = 1.5;
-    rX.setLineDash([4, 4]);
-    rX.beginPath();
-    for (let i = 1; i <= N; i++) {
-      const x = toX(haloData[i].r);
-      const y = toY(haloData[i].v);
-      if (i === 1) rX.moveTo(x, y); else rX.lineTo(x, y);
-    }
-    rX.stroke();
-    rX.setLineDash([]);
-
-    // Legend
-    rX.font = '11px "Outfit", sans-serif';
-    rX.fillStyle = 'rgba(184,57,14,0.6)';
-    rX.textAlign = 'left';
-    rX.fillText('disc', padL + 16, padT + 20);
-    rX.fillStyle = 'rgba(42,122,75,0.6)';
-    rX.fillText('halo', padL + 16, padT + 36);
-  }
-
-  // Draw total rotation curve (main)
-  rX.strokeStyle = halo === 'none' ? '#b8390e' : '#5b9cf5';
-  rX.lineWidth = 3;
-  rX.setLineDash([]);
-  rX.beginPath();
-  const drawData = halo === 'none' ? discData : totalData;
-  for (let i = 1; i <= N; i++) {
-    const x = toX(drawData[i].r);
-    const y = toY(drawData[i].v);
-    if (i === 1) rX.moveTo(x, y); else rX.lineTo(x, y);
-  }
-  rX.stroke();
-
-  // Label
-  rX.fillStyle = halo === 'none' ? '#b8390e' : '#5b9cf5';
-  rX.font = 'bold 13px "Fira Code", monospace';
-  rX.textAlign = 'left';
-  const labelText = halo === 'none' ? 'visible matter only'
-    : halo === 'isothermal' ? 'disc + isothermal halo'
-    : halo === 'nfw' ? 'disc + NFW halo'
-    : 'disc + halo (tuned to flat)';
-  rX.fillText(labelText, padL + 16, padT + (showComp && halo !== 'none' ? 52 : 20));
-
-  // Keplerian reference (v ∝ 1/√r) from peak
-  if (halo === 'none') {
-    // Find peak
-    let vPeak = 0, rPeak = 0;
-    for (const d of discData) {
-      if (d.v > vPeak) { vPeak = d.v; rPeak = d.r; }
-    }
-    if (rPeak > 0) {
-      rX.strokeStyle = 'rgba(255,255,255,0.15)';
-      rX.lineWidth = 1;
-      rX.setLineDash([3, 3]);
-      rX.beginPath();
-      for (let i = 0; i <= 100; i++) {
-        const r = rPeak + (i / 100) * (rMax - rPeak);
-        const vKep = vPeak * Math.sqrt(rPeak / r);
-        const x = toX(r), y = toY(vKep);
-        if (i === 0) rX.moveTo(x, y); else rX.lineTo(x, y);
-      }
-      rX.stroke();
-      rX.setLineDash([]);
-      rX.fillStyle = 'rgba(255,255,255,0.25)';
-      rX.font = '11px "Outfit", sans-serif';
-      rX.fillText('v ∝ 1/√r (Keplerian)', toX(rMax * 0.55), toY(vPeak * Math.sqrt(rPeak / (rMax * 0.55))) - 8);
-    }
-
-    // "Missing mass" annotation
-    if (showObs) {
-      const rAnnot = 20;
-      const vDisc = discData[Math.round(rAnnot / rMax * N)].v;
-      const vObs = 220;
-      const xA = toX(rAnnot);
-      rX.strokeStyle = 'rgba(196,147,10,0.6)';
-      rX.lineWidth = 1.5;
-      rX.setLineDash([]);
-      rX.beginPath();
-      rX.moveTo(xA, toY(vDisc));
-      rX.lineTo(xA, toY(vObs));
-      rX.stroke();
-      // Arrow heads
-      rX.fillStyle = 'rgba(196,147,10,0.6)';
-      rX.beginPath();
-      rX.moveTo(xA, toY(vObs));
-      rX.lineTo(xA - 4, toY(vObs) + 8);
-      rX.lineTo(xA + 4, toY(vObs) + 8);
-      rX.fill();
-      rX.beginPath();
-      rX.moveTo(xA, toY(vDisc));
-      rX.lineTo(xA - 4, toY(vDisc) - 8);
-      rX.lineTo(xA + 4, toY(vDisc) - 8);
-      rX.fill();
-      rX.fillStyle = '#c4930a';
-      rX.font = 'bold 12px "Outfit", sans-serif';
-      rX.textAlign = 'left';
-      rX.fillText('missing mass?', xA + 8, toY((vDisc + vObs) / 2) + 4);
-    }
+    ctx.stroke();
   }
 }
 
-['discScale'].forEach(id => document.getElementById(id).addEventListener('input', drawRotCurve));
-['haloType'].forEach(id => document.getElementById(id).addEventListener('change', drawRotCurve));
-['showObs', 'showComponents'].forEach(id => document.getElementById(id).addEventListener('change', drawRotCurve));
-drawRotCurve();
+function toggleFilter() {
+  filterOn = !filterOn;
+  const btn = document.getElementById('filterBtn');
+  const label = document.getElementById('filterLabel');
+  btn.classList.toggle('active', filterOn);
+  btn.innerHTML = filterOn
+    ? '<span class="dot"></span> Matched filter: ON'
+    : '<span class="dot"></span> Matched filter: OFF';
+  label.textContent = filterOn
+    ? 'Filtered — chirp extracted (red = GR template overlay)'
+    : 'Raw strain data (noise-dominated)';
+  draw();
+}
+
+draw();
+window.addEventListener('resize', draw);
 </script>
+
 </body>
 </html>
+
 
