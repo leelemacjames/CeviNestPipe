@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ceci n'est pas un chirp — Representation, Observation &amp; Theory-Ladenness</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --col-bg:       #f4f1eb;
+      --col-paper:    #fffdf8;
+      --col-ink:      #1a1715;
+      --col-muted:    #6b6460;
+      --col-accent:   #b5401e;
+      --col-accent2:  #1b5e7a;
+      --col-line:     #d8d3cb;
+      --col-callout:  #eae6dd;
+      --col-tok:      #e1ecf0;
+      --col-prompt:   #fdf0e6;
+      --max-w:        1060px;
+      --radius:       10px;
+      --serif:        'Source Serif 4', 'Georgia', serif;
+      --display:      'Playfair Display', 'Georgia', serif;
+      --mono:         'JetBrains Mono', 'Menlo', monospace;
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--col-ink);
+      background: var(--col-bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--col-accent2); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--col-accent); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: var(--col-ink);
+      color: var(--col-bg);
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(181,64,30,.12) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,.015) 3px, rgba(255,255,255,.015) 4px);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      margin-bottom: 0.6rem;
+      position: relative;
+    }
+    .hero h1 em { font-style: italic; color: var(--col-accent); }
+    .hero .subtitle {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: 1.15rem;
+      max-width: 52ch;
+      margin: 0 auto;
+      opacity: 0.85;
+      line-height: 1.55;
+    }
+    .hero .pipe-img {
+      display: block;
+      max-width: min(420px, 85%);
+      margin: 2.5rem auto 0;
+      border-radius: var(--radius);
+      border: 2px solid rgba(255,255,255,.12);
+      box-shadow: 0 12px 48px rgba(0,0,0,.5);
+    }
+    .hero .caption {
+      margin-top: 0.8rem;
+      font-size: 0.88rem;
+      font-style: italic;
+      opacity: 0.6;
+    }
+
+    /* ── Nav pills ── */
+    .toc-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(244,241,235,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--col-line);
+      padding: 0.6rem 1rem;
+      display: flex; flex-wrap: wrap; gap: 0.45rem;
+      justify-content: center;
+    }
+    .toc-bar a {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid var(--col-line);
+      border-radius: 999px;
+      background: var(--col-paper);
+      color: var(--col-muted);
+      transition: all .2s;
+    }
+    .toc-bar a:hover { background: var(--col-ink); color: var(--col-bg); border-color: var(--col-ink); }
+
+    /* ── Main container ── */
+    main { max-width: var(--max-w); margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+    /* ── Sections ── */
+    section { margin: 2.5rem 0; }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--col-accent);
+      margin-bottom: 0.25rem;
+    }
+    h2 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+      margin-bottom: 0.6rem;
+    }
+    h3 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      margin: 1rem 0 0.3rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--col-paper);
+      border: 1px solid var(--col-line);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    }
+
+    /* ── Grid helpers ── */
+    .grid2 { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
+    @media (min-width: 820px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+    /* ── Callout boxes ── */
+    .callout {
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      margin: 0.75rem 0;
+      border-left: 4px solid var(--col-line);
+      background: var(--col-callout);
+    }
+    .callout.tok   { background: var(--col-tok);    border-left-color: var(--col-accent2); }
+    .callout.prompt{ background: var(--col-prompt);  border-left-color: var(--col-accent); }
+
+    .callout h4 {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .callout.tok h4    { color: var(--col-accent2); }
+    .callout.prompt h4 { color: var(--col-accent); }
+
+    /* ── Figures ── */
+    figure { margin: 1rem 0; }
+    figure img {
+      width: 100%; height: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--col-line);
+    }
+    figcaption {
+      font-size: 0.88rem;
+      color: var(--col-muted);
+      margin-top: 0.35rem;
+      font-style: italic;
+    }
+
+    /* ── Audio ── */
+    audio { width: 100%; margin: 0.5rem 0; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid var(--col-line); padding: 0.6rem 0.7rem; vertical-align: top; }
+    th { background: var(--col-callout); text-align: left; font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    /* ── Separator ── */
+    .sep { height: 1px; background: var(--col-line); margin: 1.25rem 0; }
+
+    /* ── Magritte caption styling ── */
+    .magritte-caption {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 1.35rem;
+      text-align: center;
+      margin: 1.2rem 0 0.5rem;
+      color: var(--col-accent);
+    }
+
+    /* ── Footer ── */
+    footer {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 2rem;
+      border-top: 1px solid var(--col-line);
+      font-size: 0.9rem;
+      color: var(--col-muted);
+    }
+
+    /* ── Placeholder banners (for images not yet added) ── */
+    .placeholder {
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--col-callout),
+        var(--col-callout) 12px,
+        var(--col-bg) 12px,
+        var(--col-bg) 24px
+      );
+      border: 2px dashed var(--col-line);
+      border-radius: var(--radius);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--col-muted);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+    .placeholder code {
+      display: inline-block;
+      background: rgba(0,0,0,.06);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card, section > .grid2 > * {
+      animation: fadeUp .5s ease both;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  HERO                                        -->
+<!-- ════════════════════════════════════════════ -->
+<div class="hero">
+  <h1><em>Ceci n'est pas</em> un chirp</h1>
+  <p class="subtitle">
+    Representation, observation, and theory-ladenness — from Magritte's pipe to LIGO's gravitational waves.
+    A TOK-in-Physics walkthrough.
+  </p>
+  <img class="pipe-img" src="images/MagrittePipe.jpg"
+       alt="Magritte — The Treachery of Images" />
+  <p class="caption">René Magritte, <em>La Trahison des images</em> (1929)</p>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  STICKY NAV                                   -->
+<!-- ════════════════════════════════════════════ -->
+<nav class="toc-bar">
+  <a href="#representation">Representation</a>
+  <a href="#pattern">Pattern &amp; model</a>
+  <a href="#chirps">Chirps</a>
+  <a href="#theory-laden">Theory-ladenness</a>
+  <a href="#criteria">Criteria for knowledge</a>
+  <a href="#exit">Exit ticket</a>
+</nav>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  MAIN                                         -->
+<!-- ════════════════════════════════════════════ -->
+<main>
+
+  <!-- ── 1. REPRESENTATION ── -->
+  <section id="representation">
+    <div class="section-label">Part 1</div>
+    <h2>Everything is a representation</h2>
+
+    <div class="card">
+      <p>
+        Magritte's famous painting carries the caption <em>"Ceci n'est pas une pipe"</em> — this is not a pipe.
+        He was right: it is pigment on canvas arranged to trigger your "pipe" model.
+        You cannot pack it with tobacco.
+      </p>
+      <p>
+        The same move applies everywhere in physics.
+        A plotted waveform is not a wave. A spectrogram is not a sound.
+        An audio rendering of LIGO strain data is not "the sound of spacetime."
+        Each is a <strong>representation</strong> — a mapping from one domain into another
+        that our senses can parse.
+      </p>
+
+      <div class="callout tok">
+        <h4>TOK question</h4>
+        <p>
+          If every observation is mediated by a representation, can we ever access "the thing itself"?
+          Or is the question itself confused?
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. PATTERN COMPLETION ── -->
+  <section id="pattern">
+    <div class="section-label">Part 2</div>
+    <h2>Your brain fills gaps: pattern completion &amp; model lock-in</h2>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>The Dalmatian illusion</h3>
+        <figure>
+          <img src="images/dalmation.png" alt="Dalmatian dog illusion — high-contrast blotches" />
+          <figcaption>
+            Black-and-white blotches. Once you see the dog, you cannot unsee it.
+          </figcaption>
+        </figure>
+        <p>
+          The raw data: a field of irregular black regions on white.
+          There are no outlines, no labels.
+          Yet your visual cortex imposes a "dog" template — closure, continuity, familiar shape — and suddenly
+          the dalmatian is <em>obvious</em>.
+        </p>
+        <p>
+          This is <strong>model lock-in</strong>: once a perceptual model activates, it restructures the data.
+          Exactly the same pixels; entirely different experience.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>What the brain adds</h3>
+
+        <div class="callout prompt">
+          <h4>Discuss</h4>
+          <p>Before you were told "dalmatian," what did you see? After? What changed — the image or you?</p>
+        </div>
+
+        <p>
+          Human perception is not a passive camera. It is a <em>prediction-and-correction</em> system:
+          expectations (models) meet incoming data, and the brain settles on the interpretation
+          that best explains the input given its priors.
+        </p>
+        <p>
+          This is powerful — it lets us see in dim light, parse speech in noise, spot a fox by the bins at dusk.
+          But it also means <strong>observation is never neutral</strong>.
+        </p>
+
+        <!-- PLACEHOLDER: Kanizsa triangle or other illusion -->
+        <div class="placeholder">
+          <strong>📷 Placeholder: Kanizsa triangle image</strong><br />
+          Add as <code>images/kanizsa.png</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3. CHIRPS ── -->
+  <section id="chirps">
+    <div class="section-label">Part 3</div>
+    <h2>Two chirps: one literal, one translated</h2>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Chirp A — a bird</h3>
+        <p>
+          A microphone records pressure waves in air.
+          When you press play, your speakers recreate those pressure waves and your ear responds.
+          The chain is: <strong>air → microphone → file → speaker → air → cochlea</strong>.
+        </p>
+
+        <!-- PLACEHOLDER: bird chirp audio -->
+        <div class="placeholder">
+          <strong>🔊 Placeholder: Bird chirp MP3</strong><br />
+          Replace <code>src</code> below with your chosen bird MP3 URL.<br />
+          Sources: <a href="https://pixabay.com/sound-effects/search/bird-chirp/" target="_blank">Pixabay</a>,
+          <a href="https://dl.allaboutbirds.org/free-bird-song-download-from-the-cornell-lab" target="_blank">Cornell Lab</a>
+        </div>
+        <audio controls preload="none" src="PASTE_BIRD_MP3_URL_HERE">
+          Your browser does not support the audio element.
+        </audio>
+
+        <div class="callout prompt">
+          <h4>Prompt</h4>
+          <p>Is any model needed to call this a "bird chirp"? What model (species recognition, pattern memory, categorisation)?</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Chirp B — a gravitational wave</h3>
+        <p>
+          LIGO measures length changes of ~10<sup>−21</sup> m in a 4 km interferometer arm.
+          The raw output is <strong>strain vs time</strong>.
+          Scientists mapped this into audible frequencies so humans can perceive the pattern.
+          Space did not "make a sound."
+        </p>
+
+        <figure>
+          <img src="images/chirpLaden.png"
+               alt="GW150914 inspiral–merger–ringdown waveform with numerical relativity overlay" />
+          <figcaption>
+            GW150914: the reconstructed waveform (grey template) overlaid on numerical relativity (red).
+            Below: black-hole separation and relative velocity approaching <em>c</em>.
+          </figcaption>
+        </figure>
+
+        <p><strong>GW150914</strong> — September 2015 detection:</p>
+        <audio controls preload="none"
+          src="https://www.ligo.caltech.edu/system/media_files/binaries/334/original/LIGO_Sept_2015.mp3?1465951523=">
+        </audio>
+
+        <p><strong>GW151226</strong> — December 2015 detection:</p>
+        <audio controls preload="none"
+          src="https://www.ligo.caltech.edu/system/media_files/binaries/337/original/LIGO_Dec_2015.mp3?1466014968=">
+        </audio>
+
+        <p class="magritte-caption">"Ceci n'est pas un chirp."</p>
+        <p style="text-align:center; font-size:0.92rem; color:var(--col-muted);">
+          It is a <em>sonification</em> of a <em>reconstructed signal</em> extracted from
+          interferometer noise using templates derived from general relativity.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4. THEORY-LADENNESS ── -->
+  <section id="theory-laden">
+    <div class="section-label">Part 4</div>
+    <h2>Theory-ladenness: observation through a lens</h2>
+
+    <div class="card">
+      <p>
+        The philosopher N. R. Hanson argued that <strong>all observation is theory-laden</strong>:
+        what we <em>see</em> depends on the conceptual framework we bring.
+        Two observers can look at the same data and perceive different things —
+        not because the data differs, but because their models differ.
+      </p>
+
+      <div class="sep"></div>
+
+      <div class="grid2">
+        <div>
+          <h3>The dalmatian, again</h3>
+          <p>
+            Before the label, you see noise. After, a dog.
+            The label is a <em>theory</em> (a template, a prior expectation).
+            Theory-ladenness in its purest form.
+          </p>
+        </div>
+        <div>
+          <h3>LIGO's matched filter</h3>
+          <p>
+            Raw LIGO data looks like noise.
+            A <em>matched filter</em> cross-correlates the data with thousands of
+            GR-predicted waveform templates.
+            When a template matches, the signal emerges from the noise — just as the dalmatian
+            emerges from the blotches.
+          </p>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="callout tok">
+        <h4>TOK provocation</h4>
+        <p>
+          If LIGO <em>needs</em> general relativity templates to detect gravitational waves,
+          is the detection independent evidence for GR — or is it circular?
+        </p>
+        <p>
+          (The answer involves understanding the difference between using a model to
+          <em>search</em> and using independent checks to <em>validate</em>.
+          But the question is worth sitting with.)
+        </p>
+      </div>
+
+      <h3>The pipeline of representation</h3>
+      <p>Every step in the LIGO detection chain is a translation:</p>
+
+      <table>
+        <tr>
+          <th>Step</th>
+          <th>What happens</th>
+          <th>What it is not</th>
+        </tr>
+        <tr>
+          <td>Spacetime ripple</td>
+          <td>Metric perturbation propagates at <em>c</em></td>
+          <td>Not a "sound" — no medium vibrates acoustically</td>
+        </tr>
+        <tr>
+          <td>Interferometer</td>
+          <td>Differential arm-length change → photodiode current</td>
+          <td>Not a direct photograph of a wave</td>
+        </tr>
+        <tr>
+          <td>Strain time-series</td>
+          <td>Calibrated dimensionless data <em>h(t)</em></td>
+          <td>Not yet a detection — dominated by noise</td>
+        </tr>
+        <tr>
+          <td>Matched filtering</td>
+          <td>Cross-correlation with GR template bank → SNR peak</td>
+          <td>Not "seeing the wave" — it is statistical inference</td>
+        </tr>
+        <tr>
+          <td>Sonification</td>
+          <td>Frequency-shifted audio for human ears</td>
+          <td>Not "the sound of spacetime" — a pedagogical mapping</td>
+        </tr>
+      </table>
+
+      <div class="callout prompt" style="margin-top:1rem;">
+        <h4>Prompt</h4>
+        <p>
+          At which step does "observation" occur? Or does the question assume a false binary between
+          observing and constructing?
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. CRITERIA ── -->
+  <section id="criteria">
+    <div class="section-label">Part 5</div>
+    <h2>From projection to knowledge: what earns trust?</h2>
+
+    <div class="card">
+      <p>
+        If observation is always filtered, model-laden, and representational, then how is science
+        different from seeing shapes in clouds?
+        The answer: <strong>constraints</strong>.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Criterion</th>
+            <th>What it means</th>
+            <th>LIGO chirp example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Constraint</strong></td>
+            <td>Physical/mathematical rules limit allowable interpretations</td>
+            <td>Templates come from GR field equations — not free parameters</td>
+          </tr>
+          <tr>
+            <td><strong>Prediction</strong></td>
+            <td>The model makes risky forecasts that could fail</td>
+            <td>Chirp mass, spin, luminosity distance — all predicted before parameter estimation</td>
+          </tr>
+          <tr>
+            <td><strong>Independence</strong></td>
+            <td>Cross-check with different instruments or data</td>
+            <td>Two detectors (Hanford + Livingston); later Virgo; EM counterpart for GW170817</td>
+          </tr>
+          <tr>
+            <td><strong>Reproducibility</strong></td>
+            <td>Others re-run the pipeline and converge</td>
+            <td>Multiple analysis pipelines (PyCBC, GstLAL); public data releases</td>
+          </tr>
+          <tr>
+            <td><strong>Uncertainty</strong></td>
+            <td>Quantified error bars and false-alarm rates</td>
+            <td>GW150914: false-alarm rate &lt; 1 in 200 000 years; SNR ≈ 24</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout tok" style="margin-top:1rem;">
+        <h4>Key distinction</h4>
+        <p>
+          The dalmatian illusion has <em>none</em> of these constraints — which is why it's a projection.
+          LIGO has <em>all five</em> — which is why it's knowledge (provisional, model-dependent, but earned).
+        </p>
+      </div>
+
+      <!-- PLACEHOLDER: gravitational lensing before/after -->
+      <h3>Optional extension: gravitational lensing as visual reconstruction</h3>
+      <div class="grid2">
+        <div class="placeholder">
+          <strong>📷 Placeholder: Lensing — raw image</strong><br />
+          Add as <code>images/lensing_before.jpg</code><br />
+          Foreground-dominated field before subtraction
+        </div>
+        <div class="placeholder">
+          <strong>📷 Placeholder: Lensing — reconstructed arcs</strong><br />
+          Add as <code>images/lensing_after.jpg</code><br />
+          Einstein ring / arcs revealed after model subtraction
+        </div>
+      </div>
+      <p style="margin-top:0.6rem;">
+        The same logic applies: the Einstein ring is in the world, but becomes <em>visible to us</em>
+        only through constrained reconstruction. A direct analogy to the chirp.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 6. EXIT TICKET ── -->
+  <section id="exit">
+    <div class="section-label">Exit ticket</div>
+    <h2>Five lines, then a paragraph</h2>
+
+    <div class="card">
+      <div class="callout prompt">
+        <h4>Quick-fire (one sentence each)</h4>
+        <ol style="margin:0.3rem 0 0 1.2rem;">
+          <li>One way the bird chirp is "direct."</li>
+          <li>One way the gravitational chirp is "indirect."</li>
+          <li>One model assumption involved in LIGO detection.</li>
+          <li>One reason scientists translate data into sound or plots.</li>
+          <li>Complete: <em>"Observation is…"</em></li>
+        </ol>
+      </div>
+
+      <div class="callout tok" style="margin-top:1rem;">
+        <h4>Extended writing (8–10 sentences)</h4>
+        <p>
+          Choose either the gravitational-wave chirp or the dalmatian illusion.
+          Explain how it is a <em>representation</em>, how it is <em>theory-laden</em>,
+          and then defend why it does (or does not) count as <em>knowledge</em>.
+          Use at least three criteria from the table above.
+        </p>
+      </div>
+
+      <div class="sep"></div>
+
+      <p style="text-align:center; font-style:italic; color:var(--col-muted);">
+        "The map is not the territory. But a good map lets you navigate."
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  FOOTER                                       -->
+<!-- ════════════════════════════════════════════ -->
+<footer>
+  <p><strong>Teacher notes:</strong></p>
+  <p>
+    Anchor the "anti-relativism" point explicitly: science is model-laden but not arbitrary.
+    Reality constrains models through predictive failure, independent cross-checks, and quantified uncertainty.
+    The goal is not "everything is subjective" but "observation is constructed <em>and</em> constrained."
+  </p>
+  <p style="margin-top:0.6rem;">
+    <strong>GitHub setup:</strong> Place <code>index.html</code> and an <code>images/</code> folder in your repo root.
+    Enable GitHub Pages (Settings → Pages → Deploy from branch).
+    See <code>README.md</code> for the file tree.
+  </p>
+</footer>
+
+</body>
+</html>
